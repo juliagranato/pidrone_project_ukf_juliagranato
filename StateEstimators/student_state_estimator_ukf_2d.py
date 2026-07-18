@@ -154,10 +154,16 @@ class UKFStateEstimator2D(object):
               indicates the time at which the respective input was originally
               recorded
         """
-        #TODO: set self.dt to the time in seconds since this function was last run. 
+        #: set self.dt to the time in seconds since this function was last run. 
         # Ensure dt isn't negative (this might result if different nodes keep time slightly differently)
+        self.last_time_secs = msg.header.stamp.secs
+        self.last_time_nsecs = msg.header.stamp.nsecs
+        current_time = (self.last_time_secs +
+                                           self.last_time_nsecs*1e-9)
+        self.dt = max(0, current_time - self.last_state_transition_time)
 
-        #TODO: Set self.last_state_transition_time to the current time at which we just received an input
+        #: Set self.last_state_transition_time to the current time at which we just received an input
+        self.last_state_transition_time = current_time
 
         
     def initialize_input_time(self, msg):
@@ -210,14 +216,18 @@ class UKFStateEstimator2D(object):
         # save imu orientation to compensate range measurement for pitch and roll
         self.imu_orientation = data.orientation
 
-        self.last_control_input = ? #TODO handle the control input from the IMU
+        self.last_control_input = np.array([data.linear_acceleration.z]) # handle the control input from the IMU
 
         if abs(data.linear_acceleration.z) < 0.3:
             # Adaptive filtering. Lower the process noise if acceleration is low
             self.ukf.Q = np.diag([0.01, 1.0])*0.0005
         else:
             self.ukf.Q = np.diag([0.01, 1.0])*0.005
+        self.update_input_time(data)
+        self.ukf_predict()
+        self.publish_current_state()
         self.in_callback = False
+        
                         
     def ir_data_callback(self, data):
         """
@@ -250,6 +260,9 @@ class UKFStateEstimator2D(object):
             
             self.got_ir = True
             self.check_if_ready_to_filter()
+        self.ukf_predict()
+        self.ukf.update(self.last_measurement_vector)
+        self.publish_current_state()
         self.in_callback = False
             
     def check_if_ready_to_filter(self):
