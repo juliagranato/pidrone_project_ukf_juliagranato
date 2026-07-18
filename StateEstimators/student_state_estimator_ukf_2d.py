@@ -348,13 +348,11 @@ class UKFStateEstimator2D(object):
         rate = rospy.Rate(self.loop_hz)
         # Implement this method.
         while not rospy.is_shutdown():
-            time_object = rospy.Time.now()
-            current_time = time_object.to_sec()
-            self.dt = current_time - self.last_state_transition_time
-            self.last_state_transition_time = current_time
-            self.ukf_predict()
-            self.ukf.update(self.last_measurement_vector)
-            self.publish_current_state()
+            if self.ready_to_filter:
+                self.print_notice_if_first()
+                self.ukf_predict()
+                self.ukf.update(self.last_measurement_vector)
+                self.publish_current_state()
             rate.sleep()
 
 def check_positive_float_duration(val):
