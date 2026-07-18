@@ -252,7 +252,7 @@ class UKFStateEstimator2D(object):
             #  Got an initial range sensor reading, so update the initial state
             # vector of the UKF
             self.ukf.x[0] = tof_height
-            self.ukf.x[1] = 0
+            self.ukf.x[1] = 0.0
             
             #  initialize the state covariance matrix to reflect estimated
             # measurement error. Variance of the measurement -> variance of
