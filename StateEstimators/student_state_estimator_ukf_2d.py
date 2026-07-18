@@ -251,12 +251,13 @@ class UKFStateEstimator2D(object):
             self.initialize_input_time(data)
             #  Got an initial range sensor reading, so update the initial state
             # vector of the UKF
-            self.ukf.x = np.array([tof_height], [0])
+            self.ukf.x[0] = tof_height
+            self.ukf.x[1] = 0
             
             #  initialize the state covariance matrix to reflect estimated
             # measurement error. Variance of the measurement -> variance of
             # the corresponding state variable
-            self.ukf.P = np.array([self.ukf.R[0],0],[0,0])
+            self.ukf.P[0,0] = self.ukf.R[0]
             
             self.got_ir = True
             self.check_if_ready_to_filter()
